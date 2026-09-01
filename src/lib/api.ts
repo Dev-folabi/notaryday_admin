@@ -37,24 +37,25 @@ export interface ApiResponse<T> {
   meta?: Record<string, unknown>;
 }
 
-async function unwrap<T>(promise: Promise<{ data: ApiResponse<T> }>): Promise<T> {
-  const res = await promise;
-  return res.data.data;
-}
-
+// The response interceptor already unwraps `response.data.data`, so the
+// resolved value at runtime is the payload itself (typed here as T).
 const api = {
-  get: <T>(url: string, config?: Parameters<typeof client.get>[1]) =>
-    unwrap<T>(client.get<ApiResponse<T>>(url, config)),
+  get: <T>(
+    url: string,
+    config?: Parameters<typeof client.get>[1]
+  ): Promise<T> => client.get<ApiResponse<T>>(url, config) as Promise<T>,
   post: <T>(
     url: string,
     body?: unknown,
     config?: Parameters<typeof client.post>[2]
-  ) => unwrap<T>(client.post<ApiResponse<T>>(url, body, config)),
+  ): Promise<T> =>
+    client.post<ApiResponse<T>>(url, body, config) as Promise<T>,
   patch: <T>(
     url: string,
     body?: unknown,
     config?: Parameters<typeof client.patch>[2]
-  ) => unwrap<T>(client.patch<ApiResponse<T>>(url, body, config)),
+  ): Promise<T> =>
+    client.patch<ApiResponse<T>>(url, body, config) as Promise<T>,
 };
 
 export default api;
