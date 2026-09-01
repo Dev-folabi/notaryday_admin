@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Notary Day — Admin Console
 
-## Getting Started
+Internal admin dashboard for the Notary Day platform. A separate Next.js app
+(repo) that talks to the shared `notaryday_backend` API's `/admin/*` endpoints.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router, TypeScript)
+- Tailwind CSS v4
+- React Query + Zustand + axios
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env   # set NEXT_PUBLIC_API_URL
+npm run dev            # http://localhost:3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create the admin account (once) against the backend:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd ../notaryday_backend
+npx prisma db seed     # uses ADMIN_EMAIL / ADMIN_PASSWORD from backend .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sign in with that admin email/password.
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+| Route          | Purpose                                    |
+| -------------- | ------------------------------------------ |
+| `/login`       | Admin sign in                              |
+| `/overview`    | Platform KPIs: users, jobs, plan split     |
+| `/users`       | List/search notaries                       |
+| `/users/:id`   | User detail + plan change / suspend / reset|
+| `/jobs`        | Cross-user job browse with filters         |
+| `/system`      | Queues, imports, invoices, webhooks        |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Auth is a JWT Bearer token stored in `localStorage.admin_token`. The
+  `src/proxy.ts` file does a light server-side presence check (cookie) for
+  dashboard routes; real role enforcement happens client-side and, more
+  importantly, on the API via the backend `AdminGuard`.
+- Only users with `role: ADMIN` can use this app.
