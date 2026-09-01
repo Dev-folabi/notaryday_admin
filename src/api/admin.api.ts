@@ -1,8 +1,9 @@
-import api from "@/lib/api";
+import api, { envelopeGet } from "@/lib/api";
 import type {
   AdminStats,
   AdminUserRow,
   AdminJob,
+  Meta,
   Paginated,
   SystemHealth,
   UserDetail,
@@ -25,10 +26,8 @@ export function fetchStats() {
 export async function fetchUsers(
   params: ListUsersParams = {}
 ): Promise<Paginated<AdminUserRow[]>> {
-  const res = await api.get<Paginated<AdminUserRow[]>>("/admin/users", {
-    params,
-  });
-  return res;
+  const res = await envelopeGet<AdminUserRow[]>("/admin/users", { params });
+  return { data: res.data, meta: res.meta as unknown as Meta };
 }
 
 export async function fetchUser(id: string) {
@@ -64,8 +63,8 @@ export interface ListJobsParams {
 export async function fetchJobs(
   params: ListJobsParams = {}
 ): Promise<Paginated<AdminJob[]>> {
-  const res = await api.get<Paginated<AdminJob[]>>("/admin/jobs", { params });
-  return res;
+  const res = await envelopeGet<AdminJob[]>("/admin/jobs", { params });
+  return { data: res.data, meta: res.meta as unknown as Meta };
 }
 
 export async function fetchSystemHealth() {

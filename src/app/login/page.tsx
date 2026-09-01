@@ -2,12 +2,12 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
 import { login } from "@/api/auth.api";
 import { useAuthStore } from "@/store/authStore";
 import { ADMIN_TOKEN_KEY } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/brand/Logo";
 
 export function LoginForm() {
   const router = useRouter();
@@ -97,10 +97,8 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-navy px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-white">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-admin-indigo">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <h1 className="mt-4 text-xl font-bold">Notary Day Admin</h1>
+          <Logo onDark />
+          <h1 className="mt-4 text-xl font-bold">Admin Console</h1>
           <p className="mt-1 text-sm text-white/60">
             Sign in to the platform admin console
           </p>
