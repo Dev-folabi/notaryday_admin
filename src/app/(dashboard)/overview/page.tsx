@@ -5,6 +5,7 @@ import {
   Users,
   Activity,
   CreditCard,
+  Hourglass,
   Briefcase,
   AlertTriangle,
 } from "lucide-react";
@@ -73,9 +74,15 @@ export default function OverviewPage() {
         />
         <StatCard
           label="Pro subscribers"
-          value={users.byPlan.PRO + users.byPlan.PRO_ANNUAL}
+          value={users.proPaid}
           icon={CreditCard}
           sub={`${users.byPlan.FREE} on free`}
+        />
+        <StatCard
+          label="Pro trials"
+          value={users.proTrial}
+          icon={Hourglass}
+          sub={`${users.proTrial + users.proPaid} total on Pro`}
         />
         <StatCard
           label="Total jobs"

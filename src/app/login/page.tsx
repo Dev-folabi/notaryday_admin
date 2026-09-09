@@ -32,7 +32,7 @@ export function LoginForm() {
         return;
       }
       window.localStorage.setItem(ADMIN_TOKEN_KEY, res.token);
-      document.cookie = "admin_token=1; Path=/; SameSite=Lax";
+      document.cookie = "admin_token=1; Path=/; Max-Age=86400; SameSite=Lax";
       setSession(res.token, res.user);
       router.replace("/overview");
       router.refresh();

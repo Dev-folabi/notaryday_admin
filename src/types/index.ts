@@ -44,6 +44,8 @@ export interface AdminStats {
     active7d: number;
     active30d: number;
     byPlan: { FREE: number; PRO: number; PRO_ANNUAL: number };
+    proTrial: number;
+    proPaid: number;
     recent: AdminUserRow[];
   };
   jobs: {

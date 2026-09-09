@@ -30,6 +30,8 @@ function handle401(error: unknown) {
     const path = window.location.pathname;
     if (path !== "/login") {
       window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+      window.localStorage.removeItem("admin-auth");
+      document.cookie = "admin_token=; Path=/; Max-Age=0; SameSite=Lax";
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = "/login";
     }

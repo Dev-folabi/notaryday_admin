@@ -7,16 +7,26 @@ import { fetchMe } from "@/api/auth.api";
 import { useAuthStore } from "@/store/authStore";
 import { ADMIN_TOKEN_KEY } from "@/lib/api";
 import { Spinner } from "@/components/ui/Spinner";
+import { Button } from "@/components/ui/Button";
+
+function errorStatus(error: unknown): number | undefined {
+  const asResponseError = error as {
+    statusCode?: number;
+    response?: { status?: number };
+  };
+  return asResponseError?.statusCode ?? asResponseError?.response?.status;
+}
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { token, setUser, clearSession } = useAuthStore();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
     enabled: !!token,
     staleTime: 10 * 60_000,
+    retry: 1,
   });
 
   useEffect(() => {
@@ -24,11 +34,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   }, [data, setUser]);
 
   useEffect(() => {
-    if (isError) {
+    if (isError && errorStatus(error) === 401) {
       clearSession();
       router.replace("/login");
     }
-  }, [isError, clearSession, router]);
+  }, [isError, error, clearSession, router]);
 
   if (!token && typeof window !== "undefined") {
     const stored = window.localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -40,7 +50,26 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     return <Spinner />;
   }
 
-  if (isLoading || !data) {
+  if (isLoading) {
+    return <Spinner />;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-24 text-center">
+        <p className="text-sm font-semibold text-navy">
+          Couldn&apos;t reach the server
+        </p>
+        <p className="max-w-sm text-xs text-slate-soft">
+          Your session is still active. This looks like a temporary connection
+          issue — try again.
+        </p>
+        <Button onClick={() => refetch()}>Try again</Button>
+      </div>
+    );
+  }
+
+  if (!data) {
     return <Spinner />;
   }
 
