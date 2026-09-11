@@ -34,8 +34,15 @@ export async function fetchUser(id: string) {
   return api.get<UserDetail>(`/admin/users/${id}`);
 }
 
-export async function updateUserPlan(id: string, plan: PlanTier) {
-  return api.patch<AdminUserRow>(`/admin/users/${id}/plan`, { plan });
+export async function updateUserPlan(
+  id: string,
+  plan: PlanTier,
+  planExpiresAt?: string
+) {
+  return api.patch<AdminUserRow>(`/admin/users/${id}/plan`, {
+    plan,
+    planExpiresAt,
+  });
 }
 
 export async function resetUserPassword(id: string) {

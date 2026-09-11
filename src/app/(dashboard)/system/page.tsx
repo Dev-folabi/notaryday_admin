@@ -8,6 +8,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useSystemHealth } from "@/hooks/useAdmin";
+import { useMarketingHealth } from "@/hooks/useMarketing";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
@@ -23,6 +24,7 @@ const QUEUE_LABELS: Record<string, string> = {
   notification: "Notification",
   "calendar-sync": "Calendar Sync",
   "billing-webhook": "Billing Webhook",
+  marketing: "Marketing",
 };
 
 function queueTone(queue: QueueCounts): "teal" | "amber" | "red" {
@@ -36,6 +38,7 @@ function queueTone(queue: QueueCounts): "teal" | "amber" | "red" {
 
 export default function SystemPage() {
   const { data, isLoading, isError, refetch, isFetching } = useSystemHealth();
+  const { data: marketingHealth } = useMarketingHealth();
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,6 +114,49 @@ export default function SystemPage() {
               </tbody>
             </Table>
           </Card>
+
+          {marketingHealth && (
+            <Card>
+              <CardHeader
+                title="Marketing subsystem"
+                subtitle="MongoDB + the dedicated marketing worker process"
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs uppercase text-slate-soft">MongoDB</p>
+                  <p className="mt-1">
+                    <Badge tone={marketingHealth.mongo === "up" ? "teal" : "red"}>
+                      {marketingHealth.mongo === "up" ? "Up" : "Down"}
+                    </Badge>
+                  </p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs uppercase text-slate-soft">
+                    Worker heartbeat
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-navy">
+                    {marketingHealth.lastEventAt
+                      ? formatDateTime(marketingHealth.lastEventAt)
+                      : "no events yet"}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-3">
+                  <p className="text-xs uppercase text-slate-soft">
+                    Marketing queue
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-navy">
+                    {typeof marketingHealth.queue.waiting === "number"
+                      ? `${marketingHealth.queue.waiting} waiting`
+                      : "—"}
+                    {typeof marketingHealth.queue.failed === "number" &&
+                    marketingHealth.queue.failed > 0
+                      ? ` · ${marketingHealth.queue.failed} failed`
+                      : ""}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <Card>

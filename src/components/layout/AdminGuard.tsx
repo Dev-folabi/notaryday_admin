@@ -19,12 +19,23 @@ function errorStatus(error: unknown): number | undefined {
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { token, setUser, clearSession } = useAuthStore();
+  const { token: storeToken, setUser, clearSession } = useAuthStore();
+
+  // Zustand's `persist` rehydrates asynchronously on the first client render,
+  // so `storeToken` can still be null on the very first paint even though a
+  // (valid) token lives in localStorage. Read the same key `api.ts` reads so
+  // the "does a session exist?" decision is stable across the hydration
+  // boundary and never depends on a store write we haven't observed yet.
+  const storedToken =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(ADMIN_TOKEN_KEY)
+      : null;
+  const hasSession = !!storeToken || !!storedToken;
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
-    enabled: !!token,
+    enabled: hasSession,
     staleTime: 10 * 60_000,
     retry: 1,
   });
@@ -33,28 +44,43 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     if (data) setUser(data);
   }, [data, setUser]);
 
+  // All navigation lives in effects — never during render (which would throw
+  // "Cannot update a component (Router) while rendering").
   useEffect(() => {
+    // No token anywhere → sign in.
+    if (!hasSession) {
+      router.replace("/login");
+      return;
+    }
+
+    // /me rejected a 401 → token invalid/expired → wipe and redirect.
     if (isError && errorStatus(error) === 401) {
       clearSession();
-      router.replace("/login");
-    }
-  }, [isError, error, clearSession, router]);
-
-  if (!token && typeof window !== "undefined") {
-    const stored = window.localStorage.getItem(ADMIN_TOKEN_KEY);
-    if (stored) {
       router.replace("/login?invalid=1");
-      return <Spinner />;
+      return;
     }
-    router.replace("/login");
-    return <Spinner />;
-  }
 
-  if (isLoading) {
+    // /me resolved but the user isn't an admin → forbidden.
+    if (data && data.role !== "ADMIN") {
+      clearSession();
+      router.replace("/login?forbidden=1");
+    }
+  }, [
+    hasSession,
+    isError,
+    error,
+    data,
+    clearSession,
+    router,
+  ]);
+
+  if (!hasSession) {
+    // Redirecting to /login via the effect above; render nothing meanwhile.
     return <Spinner />;
   }
 
   if (isError) {
+    // Non-401 (network / 5xx): keep the session, let the user retry.
     return (
       <div className="flex flex-col items-center gap-4 py-24 text-center">
         <p className="text-sm font-semibold text-navy">
@@ -69,13 +95,12 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!data) {
+  if (isLoading || !data) {
     return <Spinner />;
   }
 
+  // data.role is validated in the effect above; guard render here.
   if (data.role !== "ADMIN") {
-    clearSession();
-    router.replace("/login?forbidden=1");
     return <Spinner />;
   }
 

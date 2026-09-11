@@ -7,6 +7,13 @@ import {
   Users,
   Briefcase,
   Activity,
+  Megaphone,
+  UsersRound,
+  Send,
+  Ban,
+  BarChart3,
+  Waves,
+  ListTodo,
   LogOut,
   X,
 } from "lucide-react";
@@ -18,6 +25,13 @@ const NAV = [
   { href: "/overview", label: "Overview", icon: LayoutDashboard },
   { href: "/users", label: "Users", icon: Users },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/marketing", label: "Marketing", icon: Megaphone, exact: true },
+  { href: "/marketing/leads", label: "Leads", icon: UsersRound },
+  { href: "/marketing/campaigns", label: "Campaigns", icon: Send },
+  { href: "/marketing/waves", label: "Waves", icon: Waves },
+  { href: "/marketing/tasks", label: "Outreach", icon: ListTodo },
+  { href: "/marketing/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/marketing/unsubscribes", label: "Unsubscribes", icon: Ban },
   { href: "/system", label: "System", icon: Activity },
 ];
 
@@ -61,10 +75,11 @@ export function Sidebar({
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {NAV.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== "/overview" &&
-                pathname.startsWith(`${item.href}/`));
+            const active = item.exact
+              ? pathname === item.href
+              : pathname === item.href ||
+                (item.href !== "/overview" &&
+                  pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.href}

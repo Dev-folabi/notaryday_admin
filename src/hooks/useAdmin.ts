@@ -65,8 +65,15 @@ export function useAdminMutations() {
   };
 
   const changePlan = useMutation({
-    mutationFn: ({ id, plan }: { id: string; plan: PlanTier }) =>
-      updateUserPlan(id, plan),
+    mutationFn: ({
+      id,
+      plan,
+      planExpiresAt,
+    }: {
+      id: string;
+      plan: PlanTier;
+      planExpiresAt?: string;
+    }) => updateUserPlan(id, plan, planExpiresAt),
     onSuccess: (_data, vars) => invalidateUser(vars.id),
   });
 

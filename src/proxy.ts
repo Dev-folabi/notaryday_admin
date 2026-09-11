@@ -5,6 +5,7 @@ const PROTECTED_PREFIX = [
   "/jobs",
   "/system",
   "/overview",
+  "/marketing",
 ];
 
 export function proxy(request: NextRequest) {

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Input";
+import { Input, Select } from "@/components/ui/Input";
 import { Table, THead, Th, Td } from "@/components/ui/Table";
 import { formatDate, titleCase } from "@/lib/utils";
 import type { PlanTier } from "@/types";
@@ -29,6 +29,7 @@ export default function UserDetailPage() {
 
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [planValue, setPlanValue] = useState("");
+  const [planExpiresAt, setPlanExpiresAt] = useState("");
   const [confirmAction, setConfirmAction] = useState<
     "reset" | "suspend" | "restore" | null
   >(null);
@@ -42,9 +43,22 @@ export default function UserDetailPage() {
 
   const submitPlan = async () => {
     if (!planValue) return;
+    if (
+      (planValue === "PRO" || planValue === "PRO_ANNUAL") &&
+      !planExpiresAt
+    ) {
+      push("Pro plans need an expiry date", "error");
+      return;
+    }
     setBusy(true);
     try {
-      await changePlan.mutateAsync({ id, plan: planValue as PlanTier });
+      await changePlan.mutateAsync({
+        id,
+        plan: planValue as PlanTier,
+        planExpiresAt: planExpiresAt
+          ? new Date(planExpiresAt).toISOString()
+          : undefined,
+      });
       push(`Plan updated to ${planValue}`);
       setPlanModalOpen(false);
     } catch {
@@ -123,6 +137,13 @@ export default function UserDetailPage() {
                 size="sm"
                 onClick={() => {
                   setPlanValue(user.plan);
+                  setPlanExpiresAt(
+                    user.plan_expires_at
+                      ? new Date(user.plan_expires_at)
+                          .toISOString()
+                          .slice(0, 16)
+                      : ""
+                  );
                   setPlanModalOpen(true);
                 }}
               >
@@ -222,6 +243,15 @@ export default function UserDetailPage() {
           <option value="PRO">Pro (monthly)</option>
           <option value="PRO_ANNUAL">Pro (annual)</option>
         </Select>
+        {(planValue === "PRO" || planValue === "PRO_ANNUAL") && (
+          <Input
+            label="Plan expires at (required for Pro tiers)"
+            type="datetime-local"
+            className="mt-3"
+            value={planExpiresAt}
+            onChange={(e) => setPlanExpiresAt(e.target.value)}
+          />
+        )}
       </Modal>
 
       <Modal

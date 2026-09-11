@@ -86,6 +86,11 @@ const api = {
     config?: AxiosRequestConfig
   ): Promise<T> =>
     client.patch<ApiResponse<T>>(url, body, config) as Promise<T>,
+  delete: <T>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<T> =>
+    client.delete<ApiResponse<T>>(url, config) as Promise<T>,
 };
 
 export default api;
