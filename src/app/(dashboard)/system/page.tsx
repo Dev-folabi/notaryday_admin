@@ -6,8 +6,11 @@ import {
   Inbox,
   Webhook,
   RefreshCw,
+  Settings,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
-import { useSystemHealth } from "@/hooks/useAdmin";
+import { useSystemHealth, useEmailProviders } from "@/hooks/useAdmin";
 import { useMarketingHealth } from "@/hooks/useMarketing";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -39,6 +42,8 @@ function queueTone(queue: QueueCounts): "teal" | "amber" | "red" {
 export default function SystemPage() {
   const { data, isLoading, isError, refetch, isFetching } = useSystemHealth();
   const { data: marketingHealth } = useMarketingHealth();
+  const { data: emailProviders, refetch: refetchEmail, isFetching: emailFetching } =
+    useEmailProviders();
 
   return (
     <div className="flex flex-col gap-6">
@@ -155,6 +160,56 @@ export default function SystemPage() {
                   </p>
                 </div>
               </div>
+            </Card>
+           )}
+
+          {emailProviders && (
+            <Card>
+              <CardHeader
+                title="Transactional email provider"
+                subtitle="Resend or Brevo handles all transactional emails (welcome, invoices, reminders). Changes may take up to 30s to apply across API and worker processes."
+              />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <Badge tone="slate" className="font-mono text-xs">
+                    Active: {emailProviders.active}
+                  </Badge>
+                  {emailProviders.providers.map((p) => (
+                    <div
+                      key={p.type}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      {p.configured ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-teal" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-slate-soft" />
+                      )}
+                      <span className="text-navy">{p.label}</span>
+                      <span className="text-slate-soft">
+                        ({p.configured ? "configured" : "unconfigured"})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => refetchEmail()}
+                  loading={emailFetching}
+                >
+                  <Settings className="h-3.5 w-3.5" /> Refresh
+                </Button>
+              </div>
+              <p className="mt-2 text-xs text-slate-soft">
+                Manage the active provider or send test emails from{" "}
+                <a
+                  href="/system/email-providers"
+                  className="font-medium text-navy hover:underline"
+                >
+                  Email providers
+                </a>
+                .
+              </p>
             </Card>
           )}
 

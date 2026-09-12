@@ -8,6 +8,7 @@ import type {
   SystemHealth,
   UserDetail,
   PlanTier,
+  EmailProviderSettings,
 } from "@/types";
 
 export interface ListUsersParams {
@@ -76,4 +77,31 @@ export async function fetchJobs(
 
 export async function fetchSystemHealth() {
   return api.get<SystemHealth>("/admin/system/health");
+}
+
+export async function fetchEmailProviders() {
+  return api.get<EmailProviderSettings>("/admin/email/providers");
+}
+
+export type ActiveProvider = { active: "resend" | "brevo" };
+
+export async function setActiveEmailProvider(provider: "resend" | "brevo") {
+  return api.patch<ActiveProvider>("/admin/email/providers", {
+    provider,
+  });
+}
+
+export interface TestEmailParams {
+  provider: "resend" | "brevo";
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
+
+export async function testEmailProvider(params: TestEmailParams) {
+  return api.post<{ provider: string; messageId?: string }>(
+    "/admin/email/test",
+    params
+  );
 }

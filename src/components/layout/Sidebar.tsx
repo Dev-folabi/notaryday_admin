@@ -14,6 +14,7 @@ import {
   BarChart3,
   Waves,
   ListTodo,
+  Mail,
   LogOut,
   X,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const NAV = [
   { href: "/marketing/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/marketing/unsubscribes", label: "Unsubscribes", icon: Ban },
   { href: "/system", label: "System", icon: Activity },
+  { href: "/system/email-providers", label: "Email providers", icon: Mail },
 ];
 
 export function Sidebar({

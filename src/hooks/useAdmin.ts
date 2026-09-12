@@ -5,12 +5,16 @@ import {
   fetchUser,
   fetchJobs,
   fetchSystemHealth,
+  fetchEmailProviders,
+  setActiveEmailProvider,
+  testEmailProvider,
   updateUserPlan,
   resetUserPassword,
   suspendUser,
   restoreUser,
   type ListUsersParams,
   type ListJobsParams,
+  type TestEmailParams,
 } from "@/api/admin.api";
 import { PlanTier } from "@/types";
 
@@ -53,6 +57,32 @@ export function useSystemHealth() {
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
+}
+
+export function useEmailProviders() {
+  return useQuery({
+    queryKey: ["admin", "email-providers"],
+    queryFn: fetchEmailProviders,
+    staleTime: 30_000,
+  });
+}
+
+export function useEmailProviderMutations() {
+  const queryClient = useQueryClient();
+
+  const toggle = useMutation({
+    mutationFn: (provider: "resend" | "brevo") =>
+      setActiveEmailProvider(provider),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "email-providers"] });
+    },
+  });
+
+  const test = useMutation({
+    mutationFn: (params: TestEmailParams) => testEmailProvider(params),
+  });
+
+  return { toggle, test };
 }
 
 export function useAdminMutations() {

@@ -638,3 +638,19 @@ export interface EmailEventRow {
   meta?: Record<string, unknown> | null;
   createdAt: string;
 }
+
+// ---------- Transactional Email Providers ----------
+
+export type TransactionalProviderType = "resend" | "brevo";
+
+export interface EmailProviderStatus {
+  type: TransactionalProviderType;
+  label: string;
+  configured: boolean;
+  fromEmail: string;
+}
+
+export interface EmailProviderSettings {
+  providers: EmailProviderStatus[];
+  active: TransactionalProviderType;
+}
