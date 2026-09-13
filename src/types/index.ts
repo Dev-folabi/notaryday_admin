@@ -173,6 +173,8 @@ export interface MarketingLead {
   emailsSent?: number;
   openedCount?: number;
   clickedCount?: number;
+  openedAt?: string[] | null;
+  clickedAt?: string[] | null;
   lastContactedAt?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -462,6 +464,8 @@ export interface CampaignRecipient {
   skipReason?: string | null;
   openCount: number;
   clickCount: number;
+  openedAt?: string[] | null;
+  clickedAt?: string[] | null;
   providerMessageId?: string | null;
   unsubToken?: string | null;
   leadName?: string | null;
