@@ -205,6 +205,21 @@ export interface LeadDetail {
   lead: MarketingLead;
   messages: LeadMessage[];
   suppression: LeadSuppression | null;
+  /** Per-step send status across all campaigns (steps 1-9). */
+  stepProgress?: LeadStepProgress[];
+}
+
+/** Sequence-step send progress for one lead, aggregated over campaigns. */
+export interface LeadStepProgress {
+  step: number;
+  /** SENT | QUEUED | FAILED | SKIPPED | BOUNCED | UNSUBSCRIBED | null */
+  status: string | null;
+  sentCount: number;
+  openCount: number;
+  clickCount: number;
+  lastSentAt: string | null;
+  nextSendAt: string | null;
+  lastError: string | null;
 }
 
 export interface GroupCount {

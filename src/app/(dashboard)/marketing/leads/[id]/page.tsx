@@ -29,7 +29,11 @@ import { Input, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDateTime, titleCase } from "@/lib/utils";
-import type { LeadMessage, MarketingLead } from "@/types";
+import type {
+  LeadMessage,
+  LeadStepProgress,
+  MarketingLead,
+} from "@/types";
 
 function tierTone(tier?: string | null): "teal" | "blue" | "amber" | "slate" {
   switch (tier) {
@@ -42,6 +46,76 @@ function tierTone(tier?: string | null): "teal" | "blue" | "amber" | "slate" {
     default:
       return "slate";
   }
+}
+
+function stepProgressTone(
+  status: string | null | undefined
+): "teal" | "blue" | "red" | "amber" | "slate" {
+  switch (status) {
+    case "SENT":
+      return "teal";
+    case "QUEUED":
+      return "blue";
+    case "FAILED":
+    case "BOUNCED":
+    case "UNSUBSCRIBED":
+      return "red";
+    case "SKIPPED":
+      return "amber";
+    default:
+      return "slate";
+  }
+}
+
+function stepProgressLabel(status: string | null | undefined): string {
+  switch (status) {
+    case "SENT":
+      return "Sent";
+    case "QUEUED":
+      return "Scheduled";
+    case "FAILED":
+      return "Failed";
+    case "BOUNCED":
+      return "Bounced";
+    case "UNSUBSCRIBED":
+      return "Opted out";
+    case "SKIPPED":
+      return "Skipped";
+    default:
+      return "";
+  }
+}
+
+function stepChipClass(status: string | null | undefined): string {
+  switch (status) {
+    case "SENT":
+      return "border-teal-200 bg-teal-50 text-teal-700";
+    case "QUEUED":
+      return "border-blue-200 bg-blue-50 text-blue-700";
+    case "FAILED":
+    case "BOUNCED":
+    case "UNSUBSCRIBED":
+      return "border-red-200 bg-red-50 text-red-700";
+    case "SKIPPED":
+      return "border-amber-200 bg-amber-50 text-amber-700";
+    default:
+      return "border-border bg-slate-50 text-slate-soft";
+  }
+}
+
+function stepTooltip(p: LeadStepProgress): string {
+  const day = p.step * 2 - 1;
+  const parts: string[] = [`Step ${p.step} (day ${day})`];
+  if (p.sentCount > 0) {
+    parts.push(
+      `sent ${p.sentCount}×${p.lastSentAt ? ` · last ${formatDateTime(p.lastSentAt)}` : ""}`
+    );
+    parts.push(`${p.openCount} opens · ${p.clickCount} clicks`);
+  }
+  if (p.nextSendAt) parts.push(`next: ${formatDateTime(p.nextSendAt)}`);
+  if (p.lastError) parts.push(p.lastError);
+  if (!p.status) parts.push("never scheduled");
+  return parts.join(" · ");
 }
 
 const STEP_TITLES = [
@@ -145,6 +219,20 @@ export default function LeadDetailPage() {
   };
   const messages = Array.from({ length: 10 }, (_, i) => messageAt(i + 1));
   const dirtyCount = Object.keys(drafts).length;
+
+  // Per-step send progress across all campaigns (steps 1-9)
+  const stepProgress = data.stepProgress ?? [];
+  const progressByStep = new Map(stepProgress.map((p) => [p.step, p]));
+  const progressFor = (step: number): LeadStepProgress | undefined =>
+    progressByStep.get(step);
+  const sentSteps = stepProgress.filter((p) => p.status === "SENT").length;
+  const scheduledSteps = stepProgress.filter(
+    (p) => p.status === "QUEUED"
+  ).length;
+  const failedSteps = stepProgress.filter(
+    (p) => p.status === "FAILED" || p.status === "BOUNCED"
+  ).length;
+  const hasAnyProgress = stepProgress.some((p) => p.status !== null);
 
   const setDraft = (step: number, patch: Partial<MessageDraft>) => {
     setDrafts((prev) => {
@@ -382,9 +470,53 @@ export default function LeadDetailPage() {
               <span className="text-xs font-medium text-amber">
                 {dirtyCount} unsaved
               </span>
+            ) : hasAnyProgress ? (
+              <span className="text-xs font-medium text-slate-body">
+                {sentSteps}/9 sent
+                {scheduledSteps > 0 ? ` · ${scheduledSteps} scheduled` : ""}
+                {failedSteps > 0 ? ` · ${failedSteps} failed` : ""}
+              </span>
             ) : undefined
           }
         />
+        {hasAnyProgress && (
+          <div className="mb-4">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-soft">
+                Sequence progress
+              </p>
+              <p className="text-[11px] text-slate-soft">
+                {sentSteps} of 9 steps sent
+                {scheduledSteps > 0
+                  ? ` · ${scheduledSteps} scheduled`
+                  : ""}
+                {failedSteps > 0 ? ` · ${failedSteps} failed` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {stepProgress.map((p) => (
+                <span
+                  key={p.step}
+                  title={stepTooltip(p)}
+                  className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold ${stepChipClass(p.status)}`}
+                >
+                  E{p.step}
+                  <span className="font-normal opacity-70">d{p.step * 2 - 1}</span>
+                  {p.openCount > 0 && (
+                    <span className="font-normal opacity-70">
+                      {p.openCount}o
+                    </span>
+                  )}
+                  {p.clickCount > 0 && (
+                    <span className="font-normal opacity-70">
+                      {p.clickCount}c
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         {messages.every((m) => !m.exists && !m.body) ? (
           <EmptyState
             title="No messages for this lead"
@@ -394,6 +526,7 @@ export default function LeadDetailPage() {
           <div className="divide-y divide-border/60">
             {messages.map((m) => {
               const open = openStep === m.step;
+              const sp = m.kind === "EMAIL" ? progressFor(m.step) : undefined;
               return (
                 <div key={m.step}>
                   <button
@@ -408,6 +541,16 @@ export default function LeadDetailPage() {
                     <span className="flex-1 text-sm font-medium text-navy">
                       {STEP_TITLES[m.step - 1]}
                     </span>
+                    {sp?.status && (
+                      <span title={stepTooltip(sp)}>
+                        <Badge tone={stepProgressTone(sp.status)}>
+                          {stepProgressLabel(sp.status)}
+                          {sp.status === "SENT" && sp.sentCount > 1
+                            ? ` ×${sp.sentCount}`
+                            : ""}
+                        </Badge>
+                      </span>
+                    )}
                     {m.edited && m.exists && <Badge tone="amber">Edited</Badge>}
                     {m.dirty && <Badge tone="red">Unsaved</Badge>}
                     <span className="hidden truncate text-xs text-slate-soft md:block md:max-w-64">
@@ -417,6 +560,32 @@ export default function LeadDetailPage() {
                   {open && (
                     <div className="pb-4">
                       <div className="flex flex-col gap-3">
+                        {sp && (sp.sentCount > 0 || sp.nextSendAt || sp.lastError) && (
+                          <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-soft">
+                            {sp.sentCount > 0 && (
+                              <span>
+                                Sent {sp.sentCount}×
+                                {sp.lastSentAt
+                                  ? ` · last ${formatDateTime(sp.lastSentAt)}`
+                                  : ""}
+                                {sp.openCount > 0 && ` · ${sp.openCount} opens`}
+                                {sp.clickCount > 0 && ` · ${sp.clickCount} clicks`}
+                                .{" "}
+                              </span>
+                            )}
+                            {sp.nextSendAt && (
+                              <span>
+                                Next scheduled {formatDateTime(sp.nextSendAt)}.{" "}
+                              </span>
+                            )}
+                            {sp.lastError && (
+                              <span className="text-red">
+                                Last issue: {sp.lastError}.{" "}
+                              </span>
+                            )}
+                            <span>Edits affect future sends only.</span>
+                          </div>
+                        )}
                         {m.kind === "EMAIL" && (
                           <Input
                             label="Subject"
