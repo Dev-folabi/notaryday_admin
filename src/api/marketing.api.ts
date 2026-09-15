@@ -17,6 +17,7 @@ import type {
   MarketingHealth,
   MarketingLead,
   MarketingOverview,
+  MarketingSettings,
   Meta,
   OutreachTask,
   Paginated,
@@ -334,6 +335,20 @@ export function fetchPlaybooks() {
 
 export function fetchMarketingHealth() {
   return api.get<MarketingHealth>("/marketing/health");
+}
+
+// ---------- Settings ----------
+
+export function fetchMarketingSettings() {
+  return api.get<MarketingSettings>("/marketing/settings");
+}
+
+export function updateMarketingSettings(data: {
+  pixelTrackingUrl?: string;
+  pixelTrackingEnabled?: boolean;
+  physicalAddress?: string;
+}) {
+  return api.patch<MarketingSettings>("/marketing/settings", data);
 }
 
 /** Triggers a browser file download for a CSV export endpoint. */

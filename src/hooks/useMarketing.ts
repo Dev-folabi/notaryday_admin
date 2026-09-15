@@ -26,6 +26,7 @@ import {
   fetchMappingPresets,
   fetchMarketingHealth,
   fetchMarketingOverview,
+  fetchMarketingSettings,
   fetchPlaybooks,
   fetchProviders,
   fetchSuppressions,
@@ -41,6 +42,7 @@ import {
   testProvider,
   updateLead,
   updateLeadMessage,
+  updateMarketingSettings,
   updateProvider,
   updateTask,
   updateWave,
@@ -73,6 +75,7 @@ const marketingKeys = {
     ["marketing", "tasks", params] as const,
   playbooks: ["marketing", "playbooks"] as const,
   health: ["marketing", "health"] as const,
+  settings: ["marketing", "settings"] as const,
 };
 
 export function useMarketingOverview() {
@@ -491,5 +494,29 @@ export function useMarketingHealth() {
     queryFn: fetchMarketingHealth,
     refetchInterval: 60_000,
     staleTime: 30_000,
+  });
+}
+
+// ---------- Settings ----------
+
+export function useMarketingSettings() {
+  return useQuery({
+    queryKey: marketingKeys.settings,
+    queryFn: fetchMarketingSettings,
+    staleTime: 60_000,
+  });
+}
+
+export function useMarketingSettingsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      pixelTrackingUrl?: string;
+      pixelTrackingEnabled?: boolean;
+      physicalAddress?: string;
+    }) => updateMarketingSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: marketingKeys.settings });
+    },
   });
 }

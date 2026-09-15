@@ -16,6 +16,7 @@ import {
   ListTodo,
   Mail,
   LogOut,
+  Settings,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const NAV = [
   { href: "/marketing/tasks", label: "Outreach", icon: ListTodo },
   { href: "/marketing/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/marketing/unsubscribes", label: "Unsubscribes", icon: Ban },
+  { href: "/marketing/settings", label: "Settings", icon: Settings },
   { href: "/system", label: "System", icon: Activity },
   { href: "/system/email-providers", label: "Email providers", icon: Mail },
 ];

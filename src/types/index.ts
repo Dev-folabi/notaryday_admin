@@ -317,6 +317,15 @@ export interface MarketingOverview {
   providers: EmailProvider[];
 }
 
+export interface MarketingSettings {
+  _id: string;
+  pixelTrackingUrl: string;
+  pixelTrackingEnabled: boolean;
+  physicalAddress: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const IMPORT_TARGET_FIELDS: { key: string; label: string }[] = [
   { key: "leadId", label: "Lead ID" },
   { key: "fitTier", label: "Fit tier" },
