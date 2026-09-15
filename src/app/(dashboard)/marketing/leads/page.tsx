@@ -120,8 +120,10 @@ export default function MarketingLeadsPage() {
   const [status, setStatus] = useState("");
   const [hasEmail, setHasEmail] = useState("");
   const [excluded, setExcluded] = useState("");
+  const [inSequence, setInSequence] = useState("");
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -139,9 +141,10 @@ export default function MarketingLeadsPage() {
     status: status || undefined,
     hasEmail: hasEmail || undefined,
     excluded: excluded || undefined,
+    inSequence: inSequence || undefined,
     sort,
     page,
-    limit: 25,
+    limit,
   };
   const { data, isLoading, isError } = useMarketingLeads(params);
 
@@ -360,6 +363,18 @@ export default function MarketingLeadsPage() {
             <option value="true">Excluded only</option>
           </Select>
           <Select
+            value={inSequence}
+            onChange={(e) => {
+              setInSequence(e.target.value);
+              setPage(1);
+            }}
+            className="xl:w-40"
+          >
+            <option value="">Any sequence</option>
+            <option value="true">In sequence</option>
+            <option value="false">Not in sequence</option>
+          </Select>
+          <Select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             className="xl:w-40"
@@ -369,6 +384,20 @@ export default function MarketingLeadsPage() {
             <option value="name">Business name</option>
             <option value="score">Prospect score</option>
             <option value="tier">Tier + score</option>
+          </Select>
+          <Select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            className="xl:w-32"
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
+            <option value={200}>200 / page</option>
           </Select>
         </div>
 

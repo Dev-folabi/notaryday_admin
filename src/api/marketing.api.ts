@@ -40,6 +40,7 @@ export interface ListLeadsParams {
   status?: string;
   hasEmail?: string;
   excluded?: string;
+  inSequence?: string;
   sort?: string;
   page?: number;
   limit?: number;
